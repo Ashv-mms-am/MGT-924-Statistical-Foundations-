@@ -1,0 +1,55 @@
+# ----------------------------------------------------------------
+# 1. SETUP: Install and load the necessary library
+# ----------------------------------------------------------------
+install.packages("tidyverse")
+library(tidyverse)
+
+# ----------------------------------------------------------------
+# NOTE: UPLOAD YOUR DATA
+# ----------------------------------------------------------------
+# If you haven't already, upload the 'ct_property_data.csv' file
+# to your Google Colab session using the "Files" tab on the left.
+# ----------------------------------------------------------------
+
+
+# ----------------------------------------------------------------
+# 2. DATA PROCESSING: Read, transform, and filter the data
+# ----------------------------------------------------------------
+
+# (2.1.1) Read the CSV file into a data frame
+property_data <- read_csv("ct_property_data.csv")
+
+# Create a new, filtered data frame with the NEW order of operations
+# RESCALE FIRST, then FILTER
+filtered_property_data_v2 <- property_data %>%
+
+  # (2.1.2) Create the 'assessedvalue_true' column
+  # True value = assessedvalue / 0.70
+  mutate(assessedvalue_true = assessedvalue / 0.70) %>%
+
+  # (2.1.3) Express 'assessedvalue_true' and 'saleamount' in thousands of dollars
+  # This step is now done BEFORE filtering.
+  mutate(
+    assessedvalue_true = assessedvalue_true / 1000,
+    saleamount = saleamount / 1000
+  ) %>%
+
+  # (2.1.4) Filter the data based on four specific conditions
+  # !!! CRITICAL CHANGE !!!
+  # Because 'assessedvalue_true' is now in thousands of dollars,
+  # the filter threshold must be changed from 250000 to 250.
+  filter(
+    residentialtype == "Single Family" &
+    town == "New Haven" &
+    listyear == 2008 &
+    assessedvalue_true < 250
+  )
+
+# ----------------------------------------------------------------
+# 3. VERIFICATION: Display the first few rows of the final data frame
+# ----------------------------------------------------------------
+print("First 6 rows of the final, filtered data (v2):")
+head(filtered_property_data_v2)
+
+print("Dimensions of the final data frame (v2 - rows, columns):")
+dim(filtered_property_data_v2)
