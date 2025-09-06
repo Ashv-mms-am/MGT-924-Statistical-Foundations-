@@ -1,0 +1,176 @@
+# Title: Statistical Analysis of Anscombe's Quartet
+# Author: Gemini
+# Date: 06/09/2024
+# Description: This script reads the 'ans.csv' file, groups the data by the 'dataset'
+#              column, and computes several summary statistics and OLS regression
+#              estimates for each group using the lm() function.
+
+# --- 1. Load Necessary Libraries ---
+# We use the 'dplyr' package from the tidyverse for its powerful and intuitive
+# data manipulation verbs like group_by() and summarise().
+# If you don't have it installed, run: install.packages("dplyr")
+library(dplyr)
+# We use 'readr' for efficiently reading the CSV file.
+# If you don't have it installed, run: install.packages("readr")
+library(readr)
+library(ggplot2)
+
+
+# --- 2. Load the Data ---
+# Read the provided CSV file into a data frame called 'anscombe_data'.
+# It's good practice to inspect the first few rows to ensure it loaded correctly.
+anscombe_data <- read_csv("ans.csv")
+print("Data successfully loaded. Here are the first few rows:")
+print(head(anscombe_data))
+
+
+# --- 3. Compute Statistics and OLS Estimates for Each Dataset ---
+# This revised approach uses do() to robustly apply calculations to each group.
+# This ensures the linear model is fit only once per dataset.
+summary_statistics <- anscombe_data %>%
+  # (a) Group the data frame by the 'dataset' column.
+  group_by(dataset) %>%
+  # (b) Use do() to fit the model and compute all statistics for each group.
+  do({
+    # Fit the linear model just once for the current group's data.
+    model <- lm(y ~ x, data = .)
+
+    # Create a one-row data frame holding all the computed results for the group.
+    data.frame(
+      mean_x = mean(.$x),
+      mean_y = mean(.$y),
+      variance_x = var(.$x),
+      variance_y = var(.$y),
+      correlation_xy = cor(.$x, .$y),
+      # Extract R-squared directly from the model summary for accuracy.
+      r_squared = summary(model)$r.squared,
+      # Extract the OLS intercept (beta_0) from the model coefficients.
+      ols_intercept = coef(model)[1],
+      # Extract the OLS slope (beta_1) from the model coefficients.
+      ols_slope = coef(model)[2]
+    )
+  })
+
+# --- 3a. Print Full OLS Summary for Each Dataset ---
+# We will iterate through each dataset, fit a linear model, and print
+# the detailed summary for each one.
+cat("\n--- Detailed OLS Regression Summaries for Each Dataset ---\n")
+anscombe_data %>%
+  group_by(dataset) %>%
+  do({
+    # Fit the linear model for the current group.
+    model <- lm(y ~ x, data = .)
+
+    # Print a header for the current dataset's summary.
+    cat("\n--- Full OLS Summary for Dataset:", .$dataset[1], "---\n")
+
+    # Print the full summary output.
+    print(summary(model))
+
+    # The do() function requires a data frame to be returned, so we return an empty one.
+    data.frame()
+  })
+
+
+# --- 3b. Compute a Combined Summary Statistics Table ---
+# This section creates the final, tidy table with key statistics.
+summary_statistics <- anscombe_data %>%
+  # (a) Group the data frame by the 'dataset' column.
+  group_by(dataset) %>%
+  # (b) Use do() to fit the model and compute all statistics for each group.
+  do({
+    # Fit the linear model just once for the current group's data.
+    model <- lm(y ~ x, data = .)
+
+    # Create a one-row data frame holding all the computed results for the group.
+    data.frame(
+      mean_x = mean(.$x),
+      mean_y = mean(.$y),
+      variance_x = var(.$x),
+      variance_y = var(.$y),
+      correlation_xy = cor(.$x, .$y),
+      # Extract R-squared directly from the model summary for accuracy.
+      r_squared = summary(model)$r.squared,
+      # Extract the OLS intercept (beta_0) from the model coefficients.
+      ols_intercept = coef(model)[1],
+      # Extract the OLS slope (beta_1) from the model coefficients.
+      ols_slope = coef(model)[2]
+    )
+  })
+
+# --- 3a. Print Full OLS Summary for Each Dataset ---
+# We will iterate through each dataset, fit a linear model, and print
+# the detailed summary for each one.
+cat("\n--- Detailed OLS Regression Summaries for Each Dataset ---\n")
+anscombe_data %>%
+  group_by(dataset) %>%
+  do({
+    # Fit the linear model for the current group.
+    model <- lm(y ~ x, data = .)
+
+    # Print a header for the current dataset's summary.
+    cat("\n--- Full OLS Summary for Dataset:", .$dataset[1], "---\n")
+
+    # Print the full summary output.
+    print(summary(model))
+
+    # The do() function requires a data frame to be returned, so we return an empty one.
+    data.frame()
+  })
+
+
+# --- 3b. Compute a Combined Summary Statistics Table ---
+# This section creates the final, tidy table with key statistics.
+summary_statistics <- anscombe_data %>%
+  # (a) Group the data frame by the 'dataset' column.
+  group_by(dataset) %>%
+  # (b) Use do() to fit the model and compute all statistics for each group.
+  do({
+    # Fit the linear model just once for the current group's data.
+    model <- lm(y ~ x, data = .)
+
+    # Create a one-row data frame holding all the computed results for the group.
+    data.frame(
+      mean_x = mean(.$x),
+      mean_y = mean(.$y),
+      variance_x = var(.$x),
+      variance_y = var(.$y),
+      correlation_xy = cor(.$x, .$y),
+      # Extract R-squared directly from the model summary for accuracy.
+      r_squared = summary(model)$r.squared,
+      # Extract the OLS intercept (beta_0) from the model coefficients.
+      ols_intercept = coef(model)[1],
+      # Extract the OLS slope (beta_1) from the model coefficients.
+      ols_slope = coef(model)[2]
+    )
+  })
+
+# --- 4. Display the Final Summary Table ---
+# Print the final summary table to the console.
+cat("\n\n--- Combined Summary Statistics and OLS Estimates ---\n")
+print(summary_statistics)
+
+# --- 5. Create and Display Scatterplots for Each Dataset ---
+# This section visualizes the data, which is crucial for interpretation.
+# We use ggplot2 to create a scatterplot for each dataset and add the OLS line.
+cat("\n\n--- Generating Scatterplots for Each Dataset ---\n")
+
+anscombe_plots <- ggplot(anscombe_data, aes(x = x, y = y)) +
+  # Add the points to create the scatterplot.
+  geom_point(size = 3, color = "steelblue") +
+  # Add the OLS regression line (linear model -> lm) without the confidence interval.
+  geom_smooth(method = "lm", se = FALSE, color = "firebrick") +
+  # Create a separate plot panel for each unique value in the 'dataset' column.
+  facet_wrap(~ dataset, ncol = 2) +
+  # Add informative labels and a title.
+  labs(
+    title = "Relationship between X and Y across Four Datasets",
+    subtitle = "Anscombe's Quartet with OLS Regression Lines",
+    x = "X Value",
+    y = "Y Value"
+  ) +
+  # Use a clean, minimal theme for the plot.
+  theme_minimal()
+
+# Print the generated plot to the plot viewer.
+print(anscombe_plots)
